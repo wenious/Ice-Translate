@@ -4,7 +4,7 @@ const app = express();
 
 app.use(express.json());
 
-// DeepL API Anahtarını buraya ekleyeceksin
+// DeepL API Anahtarını Render ortam değişkenlerine (Environment Variables) eklemelisin
 const DEEPL_API_KEY = process.env.DEEPL_API_KEY || 'SENIN_DEEPL_API_ANAHTARIN'; 
 
 app.post('/api/translate', async (req, res) => {
@@ -16,22 +16,20 @@ app.post('/api/translate', async (req, res) => {
             new URLSearchParams({
                 auth_key: DEEPL_API_KEY,
                 text: text,
-                target_lang: target_lang || 'TR' // Gelenler için Türkçe, gidenler için EN
+                target_lang: target_lang || 'EN-US' // Evrensel sürüm varsayılanı
             }),
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         );
 
-        const translatedText = response.data.translations[0].text;
-        
-        // Yanıtı SL'e JSON olarak geri dönüyoruz
+        // Yanıtı LSL'in kolay okuyabilmesi için JSON formatında dönüyoruz
         res.status(200).json({
             original: text,
-            translated: translatedText,
-            is_outgoing: is_outgoing
+            translated: response.data.translations[0].text,
+            is_outgoing: String(is_outgoing) 
         });
     } catch (error) {
-        console.error("API Error:", error.message);
-        res.status(500).send("Çeviri Hatası");
+        console.error("API Hatası:", error.message);
+        res.status(500).json({ error: "Translation failed" });
     }
 });
 
